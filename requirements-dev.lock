@@ -8,6 +8,7 @@
 #   with-sources: false
 
 -e file:.
+build==1.2.1
 cobs==1.2.1
     # via medjc09-hub-python
 iniconfig==2.0.0
@@ -16,9 +17,12 @@ mypy==1.10.0
 mypy-extensions==1.0.0
     # via mypy
 packaging==24.0
+    # via build
     # via pytest
 pluggy==1.5.0
     # via pytest
+pyproject-hooks==1.1.0
+    # via build
 pyserial==3.5
     # via pyserial-asyncio
 pyserial-asyncio==0.6
