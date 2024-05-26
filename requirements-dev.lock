@@ -19,6 +19,10 @@ packaging==24.0
     # via pytest
 pluggy==1.5.0
     # via pytest
+pyserial==3.5
+    # via pyserial-asyncio
+pyserial-asyncio==0.6
+    # via medjc09-hub-python
 pytest==8.2.1
 ruff==0.4.5
 typing-extensions==4.12.0
