@@ -16,19 +16,10 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Install Rye
-        uses: baptiste0928/cargo-install@v2
+        id: setup-rye
+        uses: eifinger/setup-rye@v3
         with:
-          crate: rye
-          git: https://github.com/mitsuhiko/rye
-          branch: main
-
-      - name: Cache Virtual Environment
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/*.TAG') }}
-          restore-keys: |
-            ${{ runner.os }}-venv-
+          enable-cache: true
 
       - name: Cache MyPy Cache
         uses: actions/cache@v4
@@ -63,27 +54,18 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Install Rye
-        uses: baptiste0928/cargo-install@v2
+        id: setup-rye
+        uses: eifinger/setup-rye@v3
         with:
-          crate: rye
-          git: https://github.com/mitsuhiko/rye
-          branch: main
+          enable-cache: true
 
       - name: Cache Pytest Cache
         uses: actions/cache@v2
         with:
           path: .pytest_cache
-          key: ${{ runner.os }}-pytest-${{ hashFiles('**/*.py') }}
+          key: ${{ runner.os }}-pytest-${{ hashFiles('**/*.TAG') }}
           restore-keys: |
             ${{ runner.os }}-pytest-
-
-      - name: Cache Virtual Environment
-        uses: actions/cache@v2
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/*.TAG') }}
-          restore-keys: |
-            ${{ runner.os }}-venv-
 
       - name: Install Dependencies
         run: rye sync
