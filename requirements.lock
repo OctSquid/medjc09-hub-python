@@ -8,3 +8,5 @@
 #   with-sources: false
 
 -e file:.
+cobs==1.2.1
+    # via medjc09-hub-python

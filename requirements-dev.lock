@@ -8,6 +8,8 @@
 #   with-sources: false
 
 -e file:.
+cobs==1.2.1
+    # via medjc09-hub-python
 iniconfig==2.0.0
     # via pytest
 mypy==1.10.0
