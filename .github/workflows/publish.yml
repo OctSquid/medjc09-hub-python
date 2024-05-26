@@ -1,0 +1,30 @@
+name: Publish Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Install Rye
+        id: setup-rye
+        uses: eifinger/setup-rye@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: rye sync
+
+      - name: Build package
+        run: rye build
+
+      - name: Publish package
+        run: rye publish --token ${{secrets.GITHUB_TOKEN}} --yes
