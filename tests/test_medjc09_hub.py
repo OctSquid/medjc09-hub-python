@@ -1,4 +1,5 @@
 import os
+import time
 
 import dotenv
 import pytest
@@ -95,6 +96,47 @@ def test_get_sme_as_voltage() -> None:
         assert isinstance(value, float)
         assert value >= 0.0
         assert value <= 5.0
+
+
+@pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
+def test_get_voltage_values_continuous() -> None:
+    """Test for getting voltage values continuous for 20 times"""
+    medjc09 = Medjc09(port)
+    me_voltage_values = []
+    sme_voltage_values = []
+
+    start_time: float = time.time()
+    frame_time: float = 1 / 20  # 20 frames per second
+    total_time: float = 0
+
+    for _ in range(20):
+        me_voltage = medjc09.get_me_as_voltage()
+        sme_voltage = medjc09.get_sme_as_voltage()
+        me_voltage_values.append(me_voltage)
+        sme_voltage_values.append(sme_voltage)
+        elapsed_time = time.time() - start_time
+        remaining_time = frame_time - elapsed_time
+        if remaining_time > 0:
+            time.sleep(remaining_time)
+        start_time = time.time()
+        total_time += elapsed_time
+
+    assert len(me_voltage_values) == 20
+    assert len(sme_voltage_values) == 20
+    for value in me_voltage_values:
+        assert isinstance(value, list)
+        assert len(value) == 4
+        for v in value:
+            assert isinstance(v, float)
+            assert v >= -5.0 / 2
+            assert v <= 5.0 / 2
+    for value in sme_voltage_values:
+        assert isinstance(value, list)
+        assert len(value) == 4
+        for v in value:
+            assert isinstance(v, float)
+            assert v >= 0.0
+            assert v <= 5.0
 
 
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
