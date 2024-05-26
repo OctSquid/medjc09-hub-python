@@ -15,10 +15,46 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
-dev-dependencies = []
+dev-dependencies = [
+    "ruff>=0.4.5",
+    "mypy>=1.10.0",
+]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/medjc09_hub_python"]
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+
+[tool.ruff]
+ignore = []
+line-length = 120
+select = [
+  "F", # pyflakes
+  "E", # pycodestyle
+  "W", # pycodestyle warnings
+  "I", # isort
+  "D", # pydocstyle
+]
+
+extend-ignore = [
+  "D100", # undocumented-public-method
+  "D104", # undocumented-public-package
+  "D105", # undocumented-magic-method
+  "D107", # undocumented-public-init
+  "D205", # blank-line-after-summary
+  "D415", # ends-in-punctuation
+]
+
+[tool.ruff.lint.pydocstyle]
+# docstringはgoogle style
+convention = "google"
+
+[tool.ruff.per-file-ignores]
+# 個別設定
+# __init__.pyは未使用インポートを許容
+"__init__.py" = ["F401"]
