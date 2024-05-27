@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, List, TypedDict, Union
 
 import serial
 from cobs import cobs
@@ -9,35 +9,60 @@ from .command import (
     GetBaseVoltageResult,
     GetConnectionsResult,
     GetMEResult,
+    GetPollingIntervalResult,
+    GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
     deserialize,
     serialize,
 )
 
+VersionType = TypedDict("VersionType", {"major": int, "minor": int, "patch": int})
+"""Type for version information."""
+
+PollingReportType = TypedDict(
+    "PollingReportType",
+    {
+        "voltage": float,
+        "me": List[int],
+        "sme": List[int],
+        "me_voltage": List[float],
+        "sme_voltage": List[float],
+        "timestamp": int,
+    },
+)
+"""Type for polling report."""
+
+PollingHandlerType = Callable[[PollingReportType], None]
+"""Type for callback functions."""
+
 
 class Medjc09:
     """A class for handling communication with the Medjc09 device."""
 
-    def __init__(self, port: str, baudrate: int = 115200):
+    def __init__(self, port: str, baudrate: int = 115200, polling_handler: Union[PollingHandlerType, None] = None):
         """Initialize the Medjc09 class.
 
         Args:
             port (str): Serial port name. E.g. "/dev/ttyUSB0"
             baudrate (int, optional): Baudrate. Defaults to 115200.
+            polling_handler (PollingHandlerType, optional): Callback function for polling. Defaults to None.
         """
+        self._is_polling_mode = False
         self._ser = serial.Serial(port, baudrate, timeout=1)
+        self._polling_handler = polling_handler
 
-    def send_command(self, command: Command) -> CommandResult:
+    def send_command(self, command: Command, params: bytes = bytes([])) -> CommandResult:
         """Send a command to the Medjc09 device and return the result.
 
         Args:
             command (Command): Command to send.
+            params (bytes, optional): Command parameters. Defaults to bytes([]).
 
         Returns:
             CommandResult: Result of the command.
         """
-        packet = serialize(command)
+        packet = serialize(command, params)
         encoded_packet = cobs.encode(packet)
         self._ser.write(encoded_packet + bytes([0x00]))
 
@@ -134,3 +159,80 @@ class Medjc09:
         """Check if the serial connection is open."""
         value = self._ser.is_open
         return bool(value)
+
+    def is_polling(self) -> bool:
+        """Check if the polling mode is active."""
+        return self._is_polling_mode
+
+    def start_polling(self) -> None:
+        """Begin watching the polling mode.
+        #! Note: that you need to call the `update()` method to receive the polling report.
+        """
+        self._is_polling_mode = True
+        _ = self.send_command(Command.CMD_START_POLLING)
+
+    def stop_polling(self) -> None:
+        """Stop watching the polling mode."""
+        self._is_polling_mode = False
+        _ = self.send_command(Command.CMD_STOP_POLLING)
+
+    def set_polling_interval(self, interval: int) -> None:
+        """Set the polling interval.
+
+        Args:
+            interval (int): Polling interval in milliseconds.
+        """
+        params = interval.to_bytes(2, byteorder="big", signed=True)
+        _ = self.send_command(Command.CMD_SET_POLLING_INTERVAL, params)
+
+    def get_polling_interval(self) -> int:
+        """Get the polling interval.
+
+        Returns:
+            int: Polling interval in milliseconds.
+        """
+        result = self.send_command(Command.CMD_GET_POLLING_INTERVAL)
+        if isinstance(result, GetPollingIntervalResult):
+            return result.interval
+        else:
+            raise ValueError("Unexpected result type")
+
+    def get_polling_report(self) -> PollingReportType:
+        """Get the polling report.
+
+        Returns:
+            dict: Polling report.
+        """
+        result = self.send_command(Command.CMD_GET_POLLING_REPORT)
+        if isinstance(result, GetPollingReportResult):
+            return {
+                "voltage": result.voltage,
+                "me": result.me,
+                "sme": result.sme,
+                "me_voltage": [result.voltage * (me_value / 32767) for me_value in result.me],
+                "sme_voltage": [result.voltage * (sme_value / 32767) for sme_value in result.sme],
+                "timestamp": result.timestamp,
+            }
+        else:
+            raise ValueError("Unexpected result type")
+
+    def update(self) -> None:
+        """Update the polling mode."""
+        if self._is_polling_mode:
+            response = self._ser.read_until(bytes([0x00]))
+            if response == b"":  # No data
+                return
+            decoded_response = cobs.decode(response[:-1])
+            result = deserialize(decoded_response)
+            if isinstance(result, GetPollingReportResult):
+                if self._polling_handler is not None:
+                    self._polling_handler(
+                        {
+                            "voltage": result.voltage,
+                            "me": result.me,
+                            "sme": result.sme,
+                            "me_voltage": [result.voltage * (me_value / 32767) for me_value in result.me],
+                            "sme_voltage": [result.voltage * (sme_value / 32767) for sme_value in result.sme],
+                            "timestamp": result.timestamp,
+                        }
+                    )
