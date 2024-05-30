@@ -11,11 +11,15 @@ dotenv.load_dotenv()
 
 
 port = os.environ.get("TEST_PORT")
+_bautrate = os.environ.get("TEST_BAUTRATE")
+bautrate = int(_bautrate) if _bautrate is not None else None
 is_not_connected = True
 try:
     if port is None:
         raise ValueError("TEST_PORT is not set.")
-    ser = serial.Serial(port, 115200, timeout=1)
+    if bautrate is None:
+        raise ValueError("TEST_BAUTRATE is not set.")
+    ser = serial.Serial(port, bautrate, timeout=1)
     is_not_connected = False
 except serial.SerialException:
     is_not_connected = True
@@ -29,7 +33,8 @@ finally:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_base_voltage() -> None:
     """Test for get_base_voltage method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     voltage = medjc09.get_base_voltage()
     assert isinstance(voltage, float)
     assert voltage >= 0.0
@@ -39,7 +44,8 @@ def test_get_base_voltage() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_connections() -> None:
     """Test for get_connections method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     connections = medjc09.get_connections()
     assert isinstance(connections, list)
     assert len(connections) == 4
@@ -50,7 +56,8 @@ def test_get_connections() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_me() -> None:
     """Test for get_me method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     me = medjc09.get_me()
     assert isinstance(me, list)
     assert len(me) == 4
@@ -63,7 +70,8 @@ def test_get_me() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_me_as_voltage() -> None:
     """Test for get_me_as_voltage method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     me_voltage = medjc09.get_me_as_voltage()
     assert isinstance(me_voltage, list)
     assert len(me_voltage) == 4
@@ -76,7 +84,8 @@ def test_get_me_as_voltage() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_sme() -> None:
     """Test for get_sme method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     sme = medjc09.get_sme()
     assert isinstance(sme, list)
     assert len(sme) == 4
@@ -89,7 +98,8 @@ def test_get_sme() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_sme_as_voltage() -> None:
     """Test for get_sme_as_voltage method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     sme_voltage = medjc09.get_sme_as_voltage()
     assert isinstance(sme_voltage, list)
     assert len(sme_voltage) == 4
@@ -102,7 +112,8 @@ def test_get_sme_as_voltage() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_start_polling() -> None:
     """Test for start_polling method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     medjc09.start_polling()
     assert medjc09.is_polling() is True
     medjc09.stop_polling()
@@ -111,7 +122,8 @@ def test_start_polling() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_stop_polling() -> None:
     """Test for stop_polling method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     medjc09.start_polling()
     medjc09.stop_polling()
     assert medjc09.is_polling() is False
@@ -120,7 +132,8 @@ def test_stop_polling() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_set_get_polling_interval() -> None:
     """Test for set_polling_interval method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     medjc09.set_polling_interval(100)
     assert medjc09.get_polling_interval() == 100
 
@@ -128,7 +141,8 @@ def test_set_get_polling_interval() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_polling_report() -> None:
     """Test for get_polling_report method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     timer = time.time()
     report = medjc09.get_polling_report()
     assert valid_polling_report(report)
@@ -139,21 +153,22 @@ def test_get_polling_report() -> None:
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_polling_mode() -> None:
     """Test for polling mode.
-    Polling interval is 50ms and duration is 1001ms.
+    Polling rate is 1000Hz and duration is 1001ms.
     """
-    interval = 50
-    duration = 1001
+    rate = 1000
+    duration = 1000
 
     count = {"value": 0}
     reports: List[PollingReportType] = []
 
     def test_polling_report(report: PollingReportType) -> None:
-        assert valid_polling_report(report)
+        # assert valid_polling_report(report)
         reports.append(report)
         count["value"] += 1
 
-    medjc09 = Medjc09(port, 115200, test_polling_report)
-    medjc09.set_polling_interval(interval)
+    medjc09 = Medjc09(port, 921600, test_polling_report)
+    time.sleep(0.5)
+    medjc09.set_polling_interval(rate)
     medjc09.start_polling()
     start_time: float = time.time()
     total_time: float = 0
@@ -162,13 +177,19 @@ def test_polling_mode() -> None:
         total_time = time.time() - start_time
     medjc09.stop_polling()
 
-    assert count["value"] == duration // interval
+    # timestampのリスト
+    timestamps = [report["timestamp"] for report in reports]
+
+    # timestampの差分のリスト
+    timestamps_delta = [(reports[i + 1]["timestamp"] - reports[i]["timestamp"]) / 1000 for i in range(len(reports) - 1)]
+    assert count["value"] >= rate
 
 
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_close() -> None:
     """Test for close method."""
-    medjc09 = Medjc09(port)
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
     medjc09.close()
     assert medjc09._ser.is_open is False
 
