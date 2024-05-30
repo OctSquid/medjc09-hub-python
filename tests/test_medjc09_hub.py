@@ -177,11 +177,6 @@ def test_polling_mode() -> None:
         total_time = time.time() - start_time
     medjc09.stop_polling()
 
-    # timestampのリスト
-    timestamps = [report["timestamp"] for report in reports]
-
-    # timestampの差分のリスト
-    timestamps_delta = [(reports[i + 1]["timestamp"] - reports[i]["timestamp"]) / 1000 for i in range(len(reports) - 1)]
     assert count["value"] >= rate
 
 
