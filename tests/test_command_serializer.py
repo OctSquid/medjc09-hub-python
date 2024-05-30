@@ -1,4 +1,4 @@
-from medjc09_hub_python.command import (
+from medjc09 import (
     Command,
     Protocol,
     serialize,

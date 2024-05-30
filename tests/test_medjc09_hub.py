@@ -5,7 +5,7 @@ from typing import List
 import dotenv
 import pytest
 import serial
-from medjc09_hub_python.medjc09_hub import Medjc09, PollingReportType
+from medjc09 import Medjc09, PollingReportType
 
 dotenv.load_dotenv()
 
