@@ -1,6 +1,6 @@
 [project]
 name = "medjc09-hub-python"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python library for medjc09 hub"
 authors = [
     { name = "OctSquid", email = "pqvs6k96@s.okayama-u.ac.jp" }
