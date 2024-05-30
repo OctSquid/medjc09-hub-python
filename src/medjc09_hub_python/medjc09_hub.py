@@ -41,14 +41,14 @@ PollingHandlerType = Callable[[PollingReportType], None]
 class Medjc09:
     """A class for handling communication with the Medjc09 device."""
 
-    def __init__(self, port: str, baudrate: int = 115200, polling_handler: Union[PollingHandlerType, None] = None):
+    def __init__(self, port: str, baudrate: int = 921600, polling_handler: Union[PollingHandlerType, None] = None):
         """Initialize the Medjc09 class.
 
         #### ! Important: You need to wait for about 0.5 seconds until the serial connection is established.
 
         Args:
             port (str): Serial port name. E.g. "/dev/ttyUSB0"
-            baudrate (int, optional): Baudrate. Defaults to 115200.
+            baudrate (int, optional): Baudrate. Defaults to 921600.
             polling_handler (PollingHandlerType, optional): Callback function for polling. Defaults to None.
         """
         self._is_polling_mode = False
