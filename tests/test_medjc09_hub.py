@@ -130,12 +130,12 @@ def test_stop_polling() -> None:
 
 
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
-def test_set_get_polling_interval() -> None:
-    """Test for set_polling_interval method."""
+def test_set_get_polling_rate() -> None:
+    """Test for set_polling_rate method."""
     medjc09 = Medjc09(port, bautrate)
     time.sleep(0.5)
-    medjc09.set_polling_interval(100)
-    assert medjc09.get_polling_interval() == 100
+    medjc09.set_polling_rate(100)
+    assert medjc09.get_polling_rate() == 100
 
 
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
@@ -168,7 +168,7 @@ def test_polling_mode() -> None:
 
     medjc09 = Medjc09(port, 921600, test_polling_report)
     time.sleep(0.5)
-    medjc09.set_polling_interval(rate)
+    medjc09.set_polling_rate(rate)
     medjc09.start_polling()
     start_time: float = time.time()
     total_time: float = 0
