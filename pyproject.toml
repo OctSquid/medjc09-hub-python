@@ -30,7 +30,7 @@ dev-dependencies = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/medjc09_hub_python"]
+packages = ["src/medjc09"]
 
 [tool.mypy]
 ignore_missing_imports = true
