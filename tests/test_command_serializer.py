@@ -54,15 +54,15 @@ def test_serialize_set_polling_interval() -> None:
     """Test for serialize function with CMD_SET_POLLING_INTERVAL."""
     # paramsは16bit整数とみなして 100を 2byteに分割
     # uint16_t 100 -> 0x0064 -> 0x64, 0x00
-    assert serialize(Command.CMD_SET_POLLING_INTERVAL, bytes([0x64, 0x00])) == bytes(
-        [Protocol.STX.value, Command.CMD_SET_POLLING_INTERVAL.value, 0x64, 0x00, Protocol.ETX.value]
+    assert serialize(Command.CMD_SET_POLLING_RATE, bytes([0x64, 0x00])) == bytes(
+        [Protocol.STX.value, Command.CMD_SET_POLLING_RATE.value, 0x64, 0x00, Protocol.ETX.value]
     )
 
 
 def test_serialize_get_polling_interval() -> None:
     """Test for serialize function with CMD_GET_POLLING_INTERVAL."""
-    assert serialize(Command.CMD_GET_POLLING_INTERVAL) == bytes(
-        [Protocol.STX.value, Command.CMD_GET_POLLING_INTERVAL.value, Protocol.ETX.value]
+    assert serialize(Command.CMD_GET_POLLING_RATE) == bytes(
+        [Protocol.STX.value, Command.CMD_GET_POLLING_RATE.value, Protocol.ETX.value]
     )
 
 

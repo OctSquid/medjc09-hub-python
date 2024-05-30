@@ -10,7 +10,7 @@ from .command import (
     GetBaseVoltageResult,
     GetConnectionsResult,
     GetMEResult,
-    GetPollingIntervalResult,
+    GetPollingRateResult,
     GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
@@ -184,24 +184,24 @@ class Medjc09:
         self._is_polling_mode = False
         _ = self.send_command(Command.CMD_STOP_POLLING)
 
-    def set_polling_interval(self, interval: int) -> None:
-        """Set the polling interval.
+    def set_polling_rate(self, rate: int) -> None:
+        """Set the polling rate.
 
         Args:
-            interval (int): Polling interval in milliseconds.
+            rate (int): Polling rate in Hz.
         """
-        params = interval.to_bytes(2, byteorder="big", signed=True)
-        _ = self.send_command(Command.CMD_SET_POLLING_INTERVAL, params)
+        params = rate.to_bytes(2, byteorder="big", signed=True)
+        _ = self.send_command(Command.CMD_SET_POLLING_RATE, params)
 
-    def get_polling_interval(self) -> int:
-        """Get the polling interval.
+    def get_polling_rate(self) -> int:
+        """Get the polling rate.
 
         Returns:
-            int: Polling interval in milliseconds.
+            int: Polling rate in Hz.
         """
-        result = self.send_command(Command.CMD_GET_POLLING_INTERVAL)
-        if isinstance(result, GetPollingIntervalResult):
-            return result.interval
+        result = self.send_command(Command.CMD_GET_POLLING_RATE)
+        if isinstance(result, GetPollingRateResult):
+            return result.rate
         else:
             raise ValueError("Unexpected result type")
 

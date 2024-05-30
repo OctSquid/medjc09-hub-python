@@ -43,10 +43,10 @@ class Command(Enum):
     CMD_STOP_POLLING = 0x41
     """Stop polling the MedJC09 Hub."""
 
-    CMD_SET_POLLING_INTERVAL = 0x42
+    CMD_SET_POLLING_RATE = 0x42
     """Set the polling interval of the MedJC09 Hub."""
 
-    CMD_GET_POLLING_INTERVAL = 0x43
+    CMD_GET_POLLING_RATE = 0x43
     """Get the polling interval of the MedJC09 Hub."""
 
     CMD_GET_POLLING_REPORT = 0x4F
@@ -155,20 +155,20 @@ class StopPollingResult(CommandResult):
 class SetPollingIntervalResult(CommandResult):
     """Result of the SetPollingInterval command."""
 
-    command: Command = Command.CMD_SET_POLLING_INTERVAL
+    command: Command = Command.CMD_SET_POLLING_RATE
 
     def __init__(self) -> None:
         pass
 
 
-class GetPollingIntervalResult(CommandResult):
+class GetPollingRateResult(CommandResult):
     """Result of the GetPollingInterval command."""
 
-    command: Command = Command.CMD_GET_POLLING_INTERVAL
-    interval: int
+    command: Command = Command.CMD_GET_POLLING_RATE
+    rate: int
 
     def __init__(self, interval: int) -> None:
-        self.interval = interval
+        self.rate = interval
 
 
 class GetPollingReportResult(CommandResult):
@@ -261,12 +261,12 @@ def deserialize(packet: bytes) -> CommandResult:
     elif command == Command.CMD_STOP_POLLING:
         return StopPollingResult()
 
-    elif command == Command.CMD_SET_POLLING_INTERVAL:
+    elif command == Command.CMD_SET_POLLING_RATE:
         return SetPollingIntervalResult()
 
-    elif command == Command.CMD_GET_POLLING_INTERVAL:
+    elif command == Command.CMD_GET_POLLING_RATE:
         interval = int.from_bytes(packet[2:4], byteorder="big", signed=False)
-        return GetPollingIntervalResult(interval)
+        return GetPollingRateResult(interval)
 
     elif command == Command.CMD_GET_POLLING_REPORT:
         voltage = (5 / 32767) * int.from_bytes(packet[2:4], byteorder="big", signed=True)

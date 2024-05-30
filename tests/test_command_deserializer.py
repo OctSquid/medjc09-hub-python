@@ -6,7 +6,7 @@ from medjc09_hub_python.command import (
     GetBaseVoltageResult,
     GetConnectionsResult,
     GetMEResult,
-    GetPollingIntervalResult,
+    GetPollingRateResult,
     GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
@@ -85,7 +85,7 @@ def test_deserialize_stop_polling() -> None:
 
 def test_deserialize_set_polling_interval() -> None:
     """Test for deserialize function with CMD_SET_POLLING_INTERVAL."""
-    packet = bytes([Protocol.STX.value, Command.CMD_SET_POLLING_INTERVAL.value, Protocol.ETX.value])
+    packet = bytes([Protocol.STX.value, Command.CMD_SET_POLLING_RATE.value, Protocol.ETX.value])
     result = deserialize(packet)
     assert isinstance(result, SetPollingIntervalResult)
 
@@ -94,12 +94,10 @@ def test_deserialize_get_polling_interval() -> None:
     """Test for deserialize function with CMD_GET_POLLING_INTERVAL."""
     interval = 100
     params = interval.to_bytes(2, byteorder="big")
-    packet = bytes(
-        [Protocol.STX.value, Command.CMD_GET_POLLING_INTERVAL.value, params[0], params[1], Protocol.ETX.value]
-    )
+    packet = bytes([Protocol.STX.value, Command.CMD_GET_POLLING_RATE.value, params[0], params[1], Protocol.ETX.value])
     result = deserialize(packet)
-    assert isinstance(result, GetPollingIntervalResult)
-    assert result.interval == interval
+    assert isinstance(result, GetPollingRateResult)
+    assert result.rate == interval
 
 
 def test_deserialize_get_polling_report() -> None:
