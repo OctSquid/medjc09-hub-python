@@ -1,3 +1,4 @@
+import time
 from typing import Callable, List, TypedDict, Union
 
 import serial
@@ -43,6 +44,8 @@ class Medjc09:
     def __init__(self, port: str, baudrate: int = 115200, polling_handler: Union[PollingHandlerType, None] = None):
         """Initialize the Medjc09 class.
 
+        #### ! Important: You need to wait for about 0.5 seconds until the serial connection is established.
+
         Args:
             port (str): Serial port name. E.g. "/dev/ttyUSB0"
             baudrate (int, optional): Baudrate. Defaults to 115200.
@@ -65,8 +68,13 @@ class Medjc09:
         packet = serialize(command, params)
         encoded_packet = cobs.encode(packet)
         self._ser.write(encoded_packet + bytes([0x00]))
-
-        response = self._ser.read_until(bytes([0x00]))
+        time.sleep(0.005)
+        response = b""
+        timeout_timer = time.time()
+        while response == b"":
+            response = self._ser.read_until(bytes([0x00]))
+            if time.time() - timeout_timer > 5.0:
+                raise TimeoutError("Timeout")
         decoded_response = cobs.decode(response[:-1])  # Remove the trailing 0x00
         result = deserialize(decoded_response)
 
@@ -222,8 +230,14 @@ class Medjc09:
             response = self._ser.read_until(bytes([0x00]))
             if response == b"":  # No data
                 return
-            decoded_response = cobs.decode(response[:-1])
-            result = deserialize(decoded_response)
+            try:
+                decoded_response = cobs.decode(response[:-1])
+            except cobs.DecodeError:
+                return
+            try:
+                result = deserialize(decoded_response)
+            except IndexError:
+                return
             if isinstance(result, GetPollingReportResult):
                 if self._polling_handler is not None:
                     self._polling_handler(
