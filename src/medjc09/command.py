@@ -230,7 +230,7 @@ def deserialize(packet: bytes) -> CommandResult:
 
     elif command == Command.CMD_GET_BASE_VOLTAGE:
         vb = int.from_bytes(packet[2:4], byteorder="big", signed=True)
-        voltage = (5 / 32767) * vb
+        voltage = 3.3 * vb / 4095
         return GetBaseVoltageResult(voltage)
 
     elif command == Command.CMD_GET_CONNECTIONS:
@@ -269,7 +269,7 @@ def deserialize(packet: bytes) -> CommandResult:
         return GetPollingRateResult(interval)
 
     elif command == Command.CMD_GET_POLLING_REPORT:
-        voltage = (5 / 32767) * int.from_bytes(packet[2:4], byteorder="big", signed=True)
+        voltage = (3.3 / 4095) * int.from_bytes(packet[2:4], byteorder="big", signed=True)
         me = [
             int.from_bytes(packet[4:6], byteorder="big", signed=True),
             int.from_bytes(packet[6:8], byteorder="big", signed=True),

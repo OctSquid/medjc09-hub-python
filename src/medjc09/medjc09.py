@@ -135,7 +135,7 @@ class Medjc09:
         """
         bv_value = self.get_base_voltage()
         me_values = self.get_me()
-        return [bv_value * (me_value / 32767) for me_value in me_values]
+        return [bv_value * (me_value / 4095) for me_value in me_values]
 
     def get_sme(self) -> List[int]:
         """Get the SME values of sensors.
@@ -217,8 +217,8 @@ class Medjc09:
                 "voltage": result.voltage,
                 "me": result.me,
                 "sme": result.sme,
-                "me_voltage": [result.voltage * (me_value / 32767) for me_value in result.me],
-                "sme_voltage": [result.voltage * (sme_value / 32767) for sme_value in result.sme],
+                "me_voltage": [result.voltage * (me_value / 4095) for me_value in result.me],
+                "sme_voltage": [result.voltage * (sme_value / 4095) for sme_value in result.sme],
                 "timestamp": result.timestamp,
             }
         else:
@@ -245,8 +245,8 @@ class Medjc09:
                             "voltage": result.voltage,
                             "me": result.me,
                             "sme": result.sme,
-                            "me_voltage": [result.voltage * (me_value / 32767) for me_value in result.me],
-                            "sme_voltage": [result.voltage * (sme_value / 32767) for sme_value in result.sme],
+                            "me_voltage": [result.voltage * (me_value / 4095) for me_value in result.me],
+                            "sme_voltage": [result.voltage * (sme_value / 4095) for sme_value in result.sme],
                             "timestamp": result.timestamp,
                         }
                     )
