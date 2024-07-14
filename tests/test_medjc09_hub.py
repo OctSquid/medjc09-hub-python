@@ -31,6 +31,15 @@ finally:
 
 
 @pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
+def test_get_version() -> None:
+    """Test for get_version method."""
+    medjc09 = Medjc09(port, bautrate)
+    time.sleep(0.5)
+    version = medjc09.get_version()
+    assert isinstance(version, str)
+
+
+@pytest.mark.skipif(is_not_connected, reason="Device is not connected.")
 def test_get_base_voltage() -> None:
     """Test for get_base_voltage method."""
     medjc09 = Medjc09(port, bautrate)
