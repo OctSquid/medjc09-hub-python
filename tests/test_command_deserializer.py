@@ -30,7 +30,7 @@ def test_deserialize_get_version() -> None:
 
 def test_deserialize_get_base_voltage() -> None:
     """Test for deserialize function with CMD_GET_BASE_VOLTAGE."""
-    vb_value = int(32767 / 5)  # Corresponds to 1V
+    vb_value = int(4095 / 5)  # Corresponds to 1V
     packet = (
         bytes([Protocol.STX.value, Command.CMD_GET_BASE_VOLTAGE.value])
         + vb_value.to_bytes(2, byteorder="big", signed=True)
