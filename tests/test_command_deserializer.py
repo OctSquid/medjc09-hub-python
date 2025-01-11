@@ -30,7 +30,7 @@ def test_deserialize_get_version() -> None:
 
 def test_deserialize_get_base_voltage() -> None:
     """Test for deserialize function with CMD_GET_BASE_VOLTAGE."""
-    vb_value = int(4095 / 5)  # Corresponds to 1V
+    vb_value = 4095  # Max value corresponds to 3.3V
     packet = (
         bytes([Protocol.STX.value, Command.CMD_GET_BASE_VOLTAGE.value])
         + vb_value.to_bytes(2, byteorder="big", signed=True)
@@ -38,7 +38,7 @@ def test_deserialize_get_base_voltage() -> None:
     )
     result = deserialize(packet)
     assert isinstance(result, GetBaseVoltageResult)
-    assert result.voltage == pytest.approx(1.0, rel=1e-2)
+    assert result.voltage == pytest.approx(3.3, rel=1e-2)
 
 
 def test_deserialize_get_connections() -> None:
@@ -102,7 +102,7 @@ def test_deserialize_get_polling_interval() -> None:
 
 def test_deserialize_get_polling_report() -> None:
     """Test for deserialize function with CMD_GET_POLLING_REPORT."""
-    BV: float = 5.0
+    BV: float = 3.3
     ME: List[int] = [1000, 1001, 0, 0]
     SME: List[int] = [2000, 2001, 0, 0]
     TIMESTAMP: int = 3500
@@ -111,8 +111,8 @@ def test_deserialize_get_polling_report() -> None:
         [
             Protocol.STX.value,
             Command.CMD_GET_POLLING_REPORT.value,
-            int(BV / 5 * 32767).to_bytes(2, byteorder="big", signed=True)[0],
-            int(BV / 5 * 32767).to_bytes(2, byteorder="big", signed=True)[1],  # base voltage
+            int(BV / 3.3 * 4095).to_bytes(2, byteorder="big", signed=True)[0],
+            int(BV / 3.3 * 4095).to_bytes(2, byteorder="big", signed=True)[1],  # base voltage
             ME[0].to_bytes(2, byteorder="big", signed=True)[0],
             ME[0].to_bytes(2, byteorder="big", signed=True)[1],
             ME[1].to_bytes(2, byteorder="big", signed=True)[0],
