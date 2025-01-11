@@ -6,12 +6,6 @@ from typing import List
 class Protocol(Enum):
     """Protocol codes for the MedJC09 Hub."""
 
-    STX = 0x02
-    """Start of the command."""
-
-    ETX = 0x03
-    """End of the command."""
-
     SETX = 0xFE
     """Start of the error response."""
 
@@ -193,17 +187,24 @@ class GetPollingReportResult(CommandResult):
         self.timestamp = timestamp
 
 
-def serialize(command: Command, params: bytes = bytes([])) -> bytes:
+def serialize(command: Command, command_id: int = 0, params: bytes = bytes([])) -> bytes:
     """Serialize a command and return a packet
 
     Args:
         command (Command): Command to serialize.
+        command_id (int): Command ID (16-bit unsigned integer).
         params (bytes): Parameters of the command.
 
     Returns:
         bytes: Serialized packet.
     """
-    packet: bytes = bytes([Protocol.STX.value, command.value] + list(params) + [Protocol.ETX.value])
+    if command_id < 0 or command_id > 0xFFFF:
+        raise ValueError("Command ID must be a 16-bit unsigned integer")
+
+    # Pack command ID as 2 bytes (big-endian)
+    id_bytes = command_id.to_bytes(2, byteorder="big")
+
+    packet: bytes = bytes([command.value]) + id_bytes + params
 
     return packet
 
@@ -220,38 +221,38 @@ def deserialize(packet: bytes) -> CommandResult:
     Raises:
         ValueError: If the command code is invalid.
     """
-    command: Command = Command(packet[1])
+    command: Command = Command(packet[0])
 
     if command == Command.CMD_GET_VERSION:
-        major = packet[2]
-        minor = packet[3]
-        patch = packet[4]
+        major = packet[3]
+        minor = packet[4]
+        patch = packet[5]
         return GetVersionResult(major, minor, patch)
 
     elif command == Command.CMD_GET_BASE_VOLTAGE:
-        vb = int.from_bytes(packet[2:4], byteorder="big", signed=True)
+        vb = int.from_bytes(packet[3:5], byteorder="big", signed=True)
         voltage = 3.3 * vb / 4095
         return GetBaseVoltageResult(voltage)
 
     elif command == Command.CMD_GET_CONNECTIONS:
-        connections = [bool(c) for c in [packet[2], packet[3], packet[4], packet[5]]]
+        connections = [bool(c) for c in [packet[3], packet[4], packet[5], packet[6]]]
         return GetConnectionsResult(connections)
 
     elif command == Command.CMD_GET_ME:
         me = [
-            int.from_bytes(packet[2:4], byteorder="big", signed=True),
-            int.from_bytes(packet[4:6], byteorder="big", signed=True),
-            int.from_bytes(packet[6:8], byteorder="big", signed=True),
-            int.from_bytes(packet[8:10], byteorder="big", signed=True),
+            int.from_bytes(packet[3:5], byteorder="big", signed=True),
+            int.from_bytes(packet[5:7], byteorder="big", signed=True),
+            int.from_bytes(packet[7:9], byteorder="big", signed=True),
+            int.from_bytes(packet[9:11], byteorder="big", signed=True),
         ]
         return GetMEResult(me)
 
     elif command == Command.CMD_GET_SME:
         sme = [
-            int.from_bytes(packet[2:4], byteorder="big", signed=True),
-            int.from_bytes(packet[4:6], byteorder="big", signed=True),
-            int.from_bytes(packet[6:8], byteorder="big", signed=True),
-            int.from_bytes(packet[8:10], byteorder="big", signed=True),
+            int.from_bytes(packet[3:5], byteorder="big", signed=True),
+            int.from_bytes(packet[5:7], byteorder="big", signed=True),
+            int.from_bytes(packet[7:9], byteorder="big", signed=True),
+            int.from_bytes(packet[9:11], byteorder="big", signed=True),
         ]
         return GetSMEResult(sme)
 
@@ -265,24 +266,24 @@ def deserialize(packet: bytes) -> CommandResult:
         return SetPollingIntervalResult()
 
     elif command == Command.CMD_GET_POLLING_RATE:
-        interval = int.from_bytes(packet[2:4], byteorder="big", signed=False)
+        interval = int.from_bytes(packet[3:5], byteorder="big", signed=False)
         return GetPollingRateResult(interval)
 
     elif command == Command.CMD_GET_POLLING_REPORT:
-        voltage = (3.3 / 4095) * int.from_bytes(packet[2:4], byteorder="big", signed=True)
+        voltage = (3.3 / 4095) * int.from_bytes(packet[3:5], byteorder="big", signed=True)
         me = [
-            int.from_bytes(packet[4:6], byteorder="big", signed=True),
-            int.from_bytes(packet[6:8], byteorder="big", signed=True),
-            int.from_bytes(packet[8:10], byteorder="big", signed=True),
-            int.from_bytes(packet[10:12], byteorder="big", signed=True),
+            int.from_bytes(packet[5:7], byteorder="big", signed=True),
+            int.from_bytes(packet[7:9], byteorder="big", signed=True),
+            int.from_bytes(packet[9:11], byteorder="big", signed=True),
+            int.from_bytes(packet[11:13], byteorder="big", signed=True),
         ]
         sme = [
-            int.from_bytes(packet[12:14], byteorder="big", signed=True),
-            int.from_bytes(packet[14:16], byteorder="big", signed=True),
-            int.from_bytes(packet[16:18], byteorder="big", signed=True),
-            int.from_bytes(packet[18:20], byteorder="big", signed=True),
+            int.from_bytes(packet[13:15], byteorder="big", signed=True),
+            int.from_bytes(packet[15:17], byteorder="big", signed=True),
+            int.from_bytes(packet[17:19], byteorder="big", signed=True),
+            int.from_bytes(packet[19:21], byteorder="big", signed=True),
         ]
-        timestamp = int.from_bytes(packet[20:24], byteorder="big", signed=False)
+        timestamp = int.from_bytes(packet[21:25], byteorder="big", signed=False)
         return GetPollingReportResult(voltage, me, sme, timestamp)
 
     else:
