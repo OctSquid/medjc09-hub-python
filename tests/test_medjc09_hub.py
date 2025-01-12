@@ -1,3 +1,10 @@
+"""Test for Medjc09 class.
+
+実機を接続してテストするため，環境変数 TEST_PORT に接続するポート名を設定してください．
+また，環境変数 TEST_BAUTRATE にボーレートを設定してください．
+それらが設定されていない場合は，テストはスキップされます．
+"""
+
 import os
 import time
 from typing import List
@@ -10,6 +17,7 @@ from medjc09 import Medjc09, PollingReportType
 dotenv.load_dotenv()
 
 
+# 実機の接続情報が設定されているか確認
 port = os.environ.get("TEST_PORT")
 _bautrate = os.environ.get("TEST_BAUTRATE")
 bautrate = int(_bautrate) if _bautrate is not None else None
