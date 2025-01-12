@@ -8,6 +8,7 @@ from .command import (
     GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
+    PingResult,
     Protocol,
     SetPollingIntervalResult,
     StartPollingResult,

@@ -10,11 +10,20 @@ from medjc09 import (
     GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
+    PingResult,
     SetPollingIntervalResult,
     StartPollingResult,
     StopPollingResult,
     deserialize,
 )
+
+
+def test_deserialize_ping() -> None:
+    """Test for deserialize function with CMD_PING."""
+    packet = bytes([Command.CMD_PING.value, 0x12, 0x34])
+    result = deserialize(packet)
+    assert isinstance(result, PingResult)
+    assert result.id == 0x1234
 
 
 def test_deserialize_get_version() -> None:

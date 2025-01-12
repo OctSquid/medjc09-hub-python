@@ -4,6 +4,11 @@ from medjc09 import (
 )
 
 
+def test_serialize_pint() -> None:
+    """Test for serialize function with CMD_PING."""
+    assert serialize(Command.CMD_PING, 0x1234) == bytes([Command.CMD_PING.value, 0x12, 0x34])
+
+
 def test_serialize_get_version() -> None:
     """Test for serialize function with CMD_GET_VERSION."""
     assert serialize(Command.CMD_GET_VERSION, 0x1234) == bytes([Command.CMD_GET_VERSION.value, 0x12, 0x34])

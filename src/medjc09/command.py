@@ -16,6 +16,9 @@ class Protocol(Enum):
 class Command(Enum):
     """Command codes for the MedJC09 Hub."""
 
+    CMD_PING = 0x00
+    """Ping the MedJC09 Hub."""
+
     CMD_GET_VERSION = 0x01
     """Get the version of the MedJC09 Hub."""
 
@@ -67,6 +70,15 @@ class Version:
         self.major = major
         self.minor = minor
         self.patch = patch
+
+
+class PingResult(CommandResult):
+    """Result of the Ping command."""
+
+    command: Command = Command.CMD_PING
+
+    def __init__(self, id: int) -> None:
+        self.id = id
 
 
 class GetVersionResult(CommandResult):
@@ -233,6 +245,9 @@ def deserialize(packet: bytes) -> CommandResult:
     command: Command = Command(packet[0])
 
     id = int.from_bytes(packet[1:3], byteorder="big", signed=False)
+
+    if command == Command.CMD_PING:
+        return PingResult(id)
 
     if command == Command.CMD_GET_VERSION:
         major = packet[3]
