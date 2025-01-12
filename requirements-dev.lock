@@ -9,6 +9,8 @@
 #   generate-hashes: false
 
 -e file:.
+asyncio==3.4.3
+    # via medjc09-hub-python
 build==1.2.1
 cobs==1.2.1
     # via medjc09-hub-python
@@ -29,6 +31,9 @@ pyserial==3.5
 pyserial-asyncio==0.6
     # via medjc09-hub-python
 pytest==8.2.1
+    # via pytest-asyncio
+pytest-asyncio==0.25.2
+    # via medjc09-hub-python
 python-dotenv==1.0.1
     # via medjc09-hub-python
 ruff==0.4.5
