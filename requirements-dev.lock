@@ -33,7 +33,6 @@ pyserial-asyncio==0.6
 pytest==8.2.1
     # via pytest-asyncio
 pytest-asyncio==0.25.2
-    # via medjc09-hub-python
 python-dotenv==1.0.1
     # via medjc09-hub-python
 ruff==0.4.5
