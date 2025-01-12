@@ -76,10 +76,9 @@ class ErrorResponse:
   """Error response from the MedJC09 Hub.
 
   This response can be received at any time and is not tied to a specific command.
-  It contains only the error code and no command ID or other metadata.
   """
 
-  error_code: Protocol
+  error_code: ErrorCodes
   """Error code."""
 
 
