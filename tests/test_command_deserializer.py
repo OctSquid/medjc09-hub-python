@@ -10,7 +10,6 @@ from medjc09 import (
     GetPollingReportResult,
     GetSMEResult,
     GetVersionResult,
-    Protocol,
     SetPollingIntervalResult,
     StartPollingResult,
     StopPollingResult,
@@ -20,9 +19,10 @@ from medjc09 import (
 
 def test_deserialize_get_version() -> None:
     """Test for deserialize function with CMD_GET_VERSION."""
-    packet = bytes([Protocol.STX.value, Command.CMD_GET_VERSION.value, 0x01, 0x00, 0x00, Protocol.ETX.value])
+    packet = bytes([Command.CMD_GET_VERSION.value, 0x12, 0x34, 0x01, 0x00, 0x00])
     result = deserialize(packet)
     assert isinstance(result, GetVersionResult)
+    assert result.id == 0x1234
     assert result.version.major == 1
     assert result.version.minor == 0
     assert result.version.patch == 0
@@ -31,21 +31,21 @@ def test_deserialize_get_version() -> None:
 def test_deserialize_get_base_voltage() -> None:
     """Test for deserialize function with CMD_GET_BASE_VOLTAGE."""
     vb_value = 4095  # Max value corresponds to 3.3V
-    packet = (
-        bytes([Protocol.STX.value, Command.CMD_GET_BASE_VOLTAGE.value])
-        + vb_value.to_bytes(2, byteorder="big", signed=True)
-        + bytes([Protocol.ETX.value])
+    packet = bytes([Command.CMD_GET_BASE_VOLTAGE.value, 0x12, 0x34]) + vb_value.to_bytes(
+        2, byteorder="big", signed=True
     )
     result = deserialize(packet)
     assert isinstance(result, GetBaseVoltageResult)
+    assert result.id == 0x1234
     assert result.voltage == pytest.approx(3.3, rel=1e-2)
 
 
 def test_deserialize_get_connections() -> None:
     """Test for deserialize function with CMD_GET_CONNECTIONS."""
-    packet = bytes([Protocol.STX.value, Command.CMD_GET_CONNECTIONS.value, 0x01, 0x00, 0x00, 0x00, Protocol.ETX.value])
+    packet = bytes([Command.CMD_GET_CONNECTIONS.value, 0x12, 0x34, 0x01, 0x00, 0x00, 0x00])
     result = deserialize(packet)
     assert isinstance(result, GetConnectionsResult)
+    assert result.id == 0x1234
     assert result.connections == [True, False, False, False]
 
 
@@ -53,9 +53,10 @@ def test_deserialize_get_me() -> None:
     """Test for deserialize function with CMD_GET_ME."""
     me_values = [1000, 1001, 0, 0]
     me_bytes = b"".join([v.to_bytes(2, byteorder="big", signed=True) for v in me_values])
-    packet = bytes([Protocol.STX.value, Command.CMD_GET_ME.value]) + me_bytes + bytes([Protocol.ETX.value])
+    packet = bytes([Command.CMD_GET_ME.value, 0x12, 0x34]) + me_bytes
     result = deserialize(packet)
     assert isinstance(result, GetMEResult)
+    assert result.id == 0x1234
     assert result.me == me_values
 
 
@@ -63,41 +64,46 @@ def test_deserialize_get_sme() -> None:
     """Test for deserialize function with CMD_GET_SME."""
     sme_values = [2000, 2001, 0, 0]
     sme_bytes = b"".join([v.to_bytes(2, byteorder="big", signed=True) for v in sme_values])
-    packet = bytes([Protocol.STX.value, Command.CMD_GET_SME.value]) + sme_bytes + bytes([Protocol.ETX.value])
+    packet = bytes([Command.CMD_GET_SME.value, 0x12, 0x34]) + sme_bytes
     result = deserialize(packet)
     assert isinstance(result, GetSMEResult)
+    assert result.id == 0x1234
     assert result.sme == sme_values
 
 
 def test_deserialize_start_polling() -> None:
     """Test for deserialize function with CMD_START_POLLING."""
-    packet = bytes([Protocol.STX.value, Command.CMD_START_POLLING.value, Protocol.ETX.value])
+    packet = bytes([Command.CMD_START_POLLING.value, 0x12, 0x34])
     result = deserialize(packet)
     assert isinstance(result, StartPollingResult)
+    assert result.id == 0x1234
 
 
 def test_deserialize_stop_polling() -> None:
     """Test for deserialize function with CMD_STOP_POLLING."""
-    packet = bytes([Protocol.STX.value, Command.CMD_STOP_POLLING.value, Protocol.ETX.value])
+    packet = bytes([Command.CMD_STOP_POLLING.value, 0x12, 0x34])
     result = deserialize(packet)
     assert isinstance(result, StopPollingResult)
+    assert result.id == 0x1234
 
 
-def test_deserialize_set_polling_interval() -> None:
-    """Test for deserialize function with CMD_SET_POLLING_INTERVAL."""
-    packet = bytes([Protocol.STX.value, Command.CMD_SET_POLLING_RATE.value, Protocol.ETX.value])
+def test_deserialize_set_polling_rate() -> None:
+    """Test for deserialize function with CMD_SET_POLLING_RATE."""
+    packet = bytes([Command.CMD_SET_POLLING_RATE.value, 0x12, 0x34])
     result = deserialize(packet)
     assert isinstance(result, SetPollingIntervalResult)
+    assert result.id == 0x1234
 
 
-def test_deserialize_get_polling_interval() -> None:
-    """Test for deserialize function with CMD_GET_POLLING_INTERVAL."""
-    interval = 100
-    params = interval.to_bytes(2, byteorder="big")
-    packet = bytes([Protocol.STX.value, Command.CMD_GET_POLLING_RATE.value, params[0], params[1], Protocol.ETX.value])
+def test_deserialize_get_polling_rate() -> None:
+    """Test for deserialize function with CMD_GET_POLLING_RATE."""
+    rate = 100
+    params = rate.to_bytes(2, byteorder="big")
+    packet = bytes([Command.CMD_GET_POLLING_RATE.value, 0x12, 0x34, params[0], params[1]])
     result = deserialize(packet)
     assert isinstance(result, GetPollingRateResult)
-    assert result.rate == interval
+    assert result.id == 0x1234
+    assert result.rate == rate
 
 
 def test_deserialize_get_polling_report() -> None:
@@ -109,8 +115,9 @@ def test_deserialize_get_polling_report() -> None:
 
     packet = bytes(
         [
-            Protocol.STX.value,
             Command.CMD_GET_POLLING_REPORT.value,
+            0x12,
+            0x34,
             int(BV / 3.3 * 4095).to_bytes(2, byteorder="big", signed=True)[0],
             int(BV / 3.3 * 4095).to_bytes(2, byteorder="big", signed=True)[1],  # base voltage
             ME[0].to_bytes(2, byteorder="big", signed=True)[0],
@@ -133,7 +140,6 @@ def test_deserialize_get_polling_report() -> None:
             TIMESTAMP.to_bytes(4, byteorder="big", signed=False)[1],
             TIMESTAMP.to_bytes(4, byteorder="big", signed=False)[2],
             TIMESTAMP.to_bytes(4, byteorder="big", signed=False)[3],  # timestamp
-            Protocol.ETX.value,
         ]
     )
 
