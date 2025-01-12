@@ -3,6 +3,8 @@ from typing import List
 import pytest
 from medjc09 import (
   Command,
+  ErrorCodes,
+  ErrorResponse,
   GetBaseVoltageResult,
   GetConnectionsResult,
   GetMEResult,
@@ -156,3 +158,71 @@ def test_deserialize_get_polling_report() -> None:
   assert result.me == ME
   assert result.sme == SME
   assert result.timestamp == TIMESTAMP
+
+
+def test_deserialize_error_response() -> None:
+  """Test for deserialize function with error response."""
+  # Test all error codes
+  error_codes = [
+    (ErrorCodes.ERR_SYNTAX, 0x01),
+    (ErrorCodes.ERR_INVALID_CMD, 0x11),
+    (ErrorCodes.ERR_INVALID_PARAM, 0x21),
+  ]
+
+  for error_code, code_value in error_codes:
+    packet = bytes([0xFE, code_value, 0xFD])
+    result = deserialize(packet)
+    assert isinstance(result, ErrorResponse)
+    assert result.error_code == error_code
+
+  # Test boundary cases
+  # Minimum valid error code
+  packet = bytes([0xFE, 0x01, 0xFD])
+  result = deserialize(packet)
+  assert isinstance(result, ErrorResponse)
+  assert result.error_code == ErrorCodes.ERR_SYNTAX
+
+  # Maximum valid error code
+  packet = bytes([0xFE, 0x21, 0xFD])
+  result = deserialize(packet)
+  assert isinstance(result, ErrorResponse)
+  assert result.error_code == ErrorCodes.ERR_INVALID_PARAM
+
+  # Invalid error packet length (too short)
+  with pytest.raises(ValueError, match="Invalid error packet length"):
+    packet = bytes([0xFE, 0x01])
+    deserialize(packet)
+
+  # Invalid error packet length (too long)
+  with pytest.raises(ValueError, match="Invalid error packet length"):
+    packet = bytes([0xFE, 0x01, 0xFD, 0x00])
+    deserialize(packet)
+
+  # Invalid error code (below minimum)
+  with pytest.raises(ValueError, match="Invalid error code"):
+    packet = bytes([0xFE, 0x00, 0xFD])
+    deserialize(packet)
+
+  # Invalid error code (above maximum)
+  with pytest.raises(ValueError, match="Invalid error code"):
+    packet = bytes([0xFE, 0x22, 0xFD])
+    deserialize(packet)
+
+  # Invalid start byte
+  with pytest.raises(ValueError):
+    packet = bytes([0xFF, 0x01, 0xFD])
+    deserialize(packet)
+
+  # Invalid end byte
+  with pytest.raises(ValueError, match="Invalid error packet end byte"):
+    packet = bytes([0xFE, 0x01, 0xFF])
+    deserialize(packet)
+
+  # Test error code validation
+  with pytest.raises(ValueError, match="Invalid error code"):
+    packet = bytes([0xFE, 0x00, 0xFD])
+    deserialize(packet)
+
+  with pytest.raises(ValueError, match="Invalid error code"):
+    packet = bytes([0xFE, 0x22, 0xFD])
+    deserialize(packet)
