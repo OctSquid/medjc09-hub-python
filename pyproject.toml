@@ -17,7 +17,7 @@ license = { text = "MIT" }
 
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling"]
+requires = ["hatchling==1.26.3", "hatch-vcs"]
 
 [tool.rye]
 dev-dependencies = [
