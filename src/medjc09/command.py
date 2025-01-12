@@ -52,6 +52,7 @@ class CommandResult:
     """Result of a command."""
 
     command: Command
+    id: int = 0
 
 
 @dataclass
@@ -75,7 +76,8 @@ class GetVersionResult(CommandResult):
     version: Version
     value: Version
 
-    def __init__(self, major: int, minor: int, patch: int) -> None:
+    def __init__(self, id: int, major: int, minor: int, patch: int) -> None:
+        self.id = id
         self.version = Version(major, minor, patch)
         self.value = self.version
 
@@ -87,7 +89,8 @@ class GetBaseVoltageResult(CommandResult):
     voltage: float
     value: float
 
-    def __init__(self, voltage: float) -> None:
+    def __init__(self, id: int, voltage: float) -> None:
+        self.id = id
         self.voltage = voltage
         self.value = self.voltage
 
@@ -99,7 +102,8 @@ class GetConnectionsResult(CommandResult):
     connections: List[bool]
     values: List[bool]
 
-    def __init__(self, connections: List[bool]) -> None:
+    def __init__(self, id: int, connections: List[bool]) -> None:
+        self.id = id
         self.connections = connections
         self.value = self.connections
 
@@ -111,7 +115,8 @@ class GetMEResult(CommandResult):
     me: List[int]
     values: List[int]
 
-    def __init__(self, me: List[int]) -> None:
+    def __init__(self, id: int, me: List[int]) -> None:
+        self.id = id
         self.me = me
         self.value = self.me
 
@@ -123,7 +128,8 @@ class GetSMEResult(CommandResult):
     sme: List[int]
     values: List[int]
 
-    def __init__(self, sme: List[int]) -> None:
+    def __init__(self, id: int, sme: List[int]) -> None:
+        self.id = id
         self.sme = sme
         self.value = self.sme
 
@@ -133,8 +139,8 @@ class StartPollingResult(CommandResult):
 
     command: Command = Command.CMD_START_POLLING
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id: int) -> None:
+        self.id = id
 
 
 class StopPollingResult(CommandResult):
@@ -142,8 +148,8 @@ class StopPollingResult(CommandResult):
 
     command: Command = Command.CMD_STOP_POLLING
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id: int) -> None:
+        self.id = id
 
 
 class SetPollingIntervalResult(CommandResult):
@@ -151,8 +157,8 @@ class SetPollingIntervalResult(CommandResult):
 
     command: Command = Command.CMD_SET_POLLING_RATE
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id: int) -> None:
+        self.id = id
 
 
 class GetPollingRateResult(CommandResult):
@@ -161,7 +167,8 @@ class GetPollingRateResult(CommandResult):
     command: Command = Command.CMD_GET_POLLING_RATE
     rate: int
 
-    def __init__(self, interval: int) -> None:
+    def __init__(self, id: int, interval: int) -> None:
+        self.id = id
         self.rate = interval
 
 
@@ -176,33 +183,35 @@ class GetPollingReportResult(CommandResult):
 
     def __init__(
         self,
+        id: int,
         voltage: float = 0.0,
         me: List[int] = [0, 0, 0, 0],
         sme: List[int] = [0, 0, 0, 0],
         timestamp: int = 0,
     ) -> None:
+        self.id = id
         self.voltage = voltage
         self.me = me
         self.sme = sme
         self.timestamp = timestamp
 
 
-def serialize(command: Command, command_id: int = 0, params: bytes = bytes([])) -> bytes:
+def serialize(command: Command, id: int = 0, params: bytes = bytes([])) -> bytes:
     """Serialize a command and return a packet
 
     Args:
         command (Command): Command to serialize.
-        command_id (int): Command ID (16-bit unsigned integer).
+        id (int): ID (16-bit unsigned integer).
         params (bytes): Parameters of the command.
 
     Returns:
         bytes: Serialized packet.
     """
-    if command_id < 0 or command_id > 0xFFFF:
+    if id < 0 or id > 0xFFFF:
         raise ValueError("Command ID must be a 16-bit unsigned integer")
 
     # Pack command ID as 2 bytes (big-endian)
-    id_bytes = command_id.to_bytes(2, byteorder="big")
+    id_bytes = id.to_bytes(2, byteorder="big", signed=False)
 
     packet: bytes = bytes([command.value]) + id_bytes + params
 
@@ -223,20 +232,22 @@ def deserialize(packet: bytes) -> CommandResult:
     """
     command: Command = Command(packet[0])
 
+    id = int.from_bytes(packet[1:3], byteorder="big", signed=False)
+
     if command == Command.CMD_GET_VERSION:
         major = packet[3]
         minor = packet[4]
         patch = packet[5]
-        return GetVersionResult(major, minor, patch)
+        return GetVersionResult(id, major, minor, patch)
 
     elif command == Command.CMD_GET_BASE_VOLTAGE:
         vb = int.from_bytes(packet[3:5], byteorder="big", signed=True)
         voltage = 3.3 * vb / 4095
-        return GetBaseVoltageResult(voltage)
+        return GetBaseVoltageResult(id, voltage)
 
     elif command == Command.CMD_GET_CONNECTIONS:
         connections = [bool(c) for c in [packet[3], packet[4], packet[5], packet[6]]]
-        return GetConnectionsResult(connections)
+        return GetConnectionsResult(id, connections)
 
     elif command == Command.CMD_GET_ME:
         me = [
@@ -245,7 +256,7 @@ def deserialize(packet: bytes) -> CommandResult:
             int.from_bytes(packet[7:9], byteorder="big", signed=True),
             int.from_bytes(packet[9:11], byteorder="big", signed=True),
         ]
-        return GetMEResult(me)
+        return GetMEResult(id, me)
 
     elif command == Command.CMD_GET_SME:
         sme = [
@@ -254,20 +265,20 @@ def deserialize(packet: bytes) -> CommandResult:
             int.from_bytes(packet[7:9], byteorder="big", signed=True),
             int.from_bytes(packet[9:11], byteorder="big", signed=True),
         ]
-        return GetSMEResult(sme)
+        return GetSMEResult(id, sme)
 
     elif command == Command.CMD_START_POLLING:
-        return StartPollingResult()
+        return StartPollingResult(id)
 
     elif command == Command.CMD_STOP_POLLING:
-        return StopPollingResult()
+        return StopPollingResult(id)
 
     elif command == Command.CMD_SET_POLLING_RATE:
-        return SetPollingIntervalResult()
+        return SetPollingIntervalResult(id)
 
     elif command == Command.CMD_GET_POLLING_RATE:
         interval = int.from_bytes(packet[3:5], byteorder="big", signed=False)
-        return GetPollingRateResult(interval)
+        return GetPollingRateResult(id, interval)
 
     elif command == Command.CMD_GET_POLLING_REPORT:
         voltage = (3.3 / 4095) * int.from_bytes(packet[3:5], byteorder="big", signed=True)
@@ -284,7 +295,7 @@ def deserialize(packet: bytes) -> CommandResult:
             int.from_bytes(packet[19:21], byteorder="big", signed=True),
         ]
         timestamp = int.from_bytes(packet[21:25], byteorder="big", signed=False)
-        return GetPollingReportResult(voltage, me, sme, timestamp)
+        return GetPollingReportResult(id, voltage, me, sme, timestamp)
 
     else:
         raise ValueError(f"Invalid command code: {command}")
