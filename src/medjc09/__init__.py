@@ -1,6 +1,7 @@
 from .command import (
   Command,
   CommandResult,
+  ErrorCodes,
   ErrorResponse,
   GetBaseVoltageResult,
   GetConnectionsResult,
@@ -29,6 +30,7 @@ __all__ = [
   "Command",
   "CommandResult",
   "ErrorResponse",
+  "ErrorCodes",
   "GetBaseVoltageResult",
   "GetConnectionsResult",
   "GetMEResult",

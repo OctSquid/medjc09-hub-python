@@ -6,10 +6,10 @@ from typing import List
 class Protocol(Enum):
   """Protocol codes for the MedJC09 Hub."""
 
-  SETX = 0xFE
+  SERTX = 0xFE
   """Start of the error response."""
 
-  EETX = 0xFD
+  EERTX = 0xFD
   """End of the error response."""
 
 
@@ -80,6 +80,9 @@ class ErrorResponse:
 
   error_code: ErrorCodes
   """Error code."""
+
+  def __init__(self, error_code: ErrorCodes):
+    self.error_code = error_code
 
 
 @dataclass
@@ -267,19 +270,24 @@ def deserialize(packet: bytes) -> CommandResult:
       ValueError: If the command code is invalid.
   """
   # Check for error response
-  if len(packet) >= 3 and packet[0] == Protocol.SETX.value:
+  if len(packet) < 3:
+    raise ValueError("Invalid error packet length")
+
+  # Handle error packet
+  if packet[0] == Protocol.SERTX.value:  # Error packet start byte
     if len(packet) != 3:
       raise ValueError("Invalid error packet length")
-    if packet[2] != Protocol.EETX.value:
-      raise ValueError("Invalid error packet end byte")
+    if packet[2] != Protocol.EERTX.value:
+      raise ValueError("Invalid error packet end byte: expected 0xFD")
 
     # Validate error code
     error_byte = packet[1]
-    if error_byte not in [e.value for e in Protocol if isinstance(e.value, int)]:
-      raise ValueError(f"Invalid error code: 0x{error_byte:02X}")
+    try:
+      error_code = ErrorCodes(error_byte)
+    except ValueError:
+      raise ValueError(f"Invalid error code: 0x{error_byte:02X}") from None
 
-    error_code = Protocol(error_byte)
-    return ErrorResponse(error_code)
+    return ErrorResponse(error_code=error_code)
 
   command: Command = Command(packet[0])
   id = int.from_bytes(packet[1:3], byteorder="big", signed=False)
